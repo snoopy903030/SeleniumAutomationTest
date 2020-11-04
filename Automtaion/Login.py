@@ -1,98 +1,110 @@
-from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
-
-# Globle variable
-global driver
-driver = webdriver.Chrome('C:\\Webdriver\\chromedriver.exe')
-global url_spotify
-url_spotify = "https://accounts.spotify.com/en/login"
-
-strUsername = ""
-strPassword = ""
-
-
-print("----Global-------")
-
-def OpenURL():
-    print("In OpenURL")
-    driver.get(url_spotify)
-    print("driver is none below")
-    print(driver is None)
-
-    main_windowhandle = driver.window_handles
-    print("main window is none below")
-    print(main_windowhandle is None)
-
-    driver.implicitly_wait(5)
-    driver.maximize_window()
-    print(driver.title)
+from Commons import *
 
 # Check if button login wigh Facebook\Apple\Google are exist and if needs to be click
 def loginwithOtherAccount(AccountType,btn_Click):
+
     print("Enter Login with other aacount")
-    btn_LoginwithAccount = driver.find_elements_by_css_selector('[analytics-event="'+ AccountType + " Button\"]")
-    if len(btn_LoginwithAccount) > 0:
+    css_value = '[analytics-event="'+ AccountType + " Button\"]"
+    btn_LoginwithAccount = FindElement("css_selector",css_value )
+
+    if (btn_LoginwithAccount != None):
         print("The button [Continue with "+ AccountType +"] exist.")
         if btn_Click != 0:
-            btn_LoginwithAccount[0].click()
+            btn_LoginwithAccount.click()
     else:
         print("The button [Continue with "+ AccountType +"] doesn't exist!'")
 
-def CheckWindowTitel(strExpectedTitle):
-    strActual = driver.title
-    strExpected = strExpectedTitle
-    if (strActual.find(strExpected)!=-1):
-        print("The Title of current window is: "+strActual + ", Pass the test!")
-        return True
-    else:
-        print("The Title of current window is: " + strActual + ", Test Failed!")
-        return False
-
-
+# Check if Username text box exist and type User as required
 def InputUsername(strUsername):
-    Textbox_Username = driver.find_elements_by_id("login-username")
-    if (len(Textbox_Username) > 0):
+
+    tbox_Username = FindElement("id", "login-username")
+    if (tbox_Username != None):
         print('The username text box is exist.Type the username as: '+strUsername)
     else:
         print('Cannot find the username text box!')
+
     if (strUsername != ""):
-        Textbox_Username[0].send_keys(strUsername)
+        tbox_Username.send_keys(strUsername)
 
-
+# Check if Password text box exist and Type password as required
 def InputPassword(strPassword):
-    Textbox_pwd = driver.find_elements_by_id("login-password")
-    if (len(Textbox_pwd) > 0):
+
+    tbox_Pwd = FindElement("id","login-password")
+    if (tbox_Pwd != None):
         print('The passowrd text box is exist.Type the password as: '+strPassword)
     else:
         print('Cannot find the password text box!')
-    if (strPassword != ""):
-        Textbox_pwd[0].send_keys(strPassword)
 
+    if (strPassword != ""):
+        tbox_Pwd.send_keys(strPassword)
+
+#Click Login Button, when boolClick = True, click the button
 def ClickbtnLogin(boolClick):
-    btn_login = driver.find_elements_by_css_selector("#login-button")
-    if (len(btn_login) > 0):
+
+    btn_login = FindElement("css_selector","#login-button")
+    if (btn_login != None):
         print('The Login button is exist.')
     else:
         print("The login button doesn't exist.")
+
     if (boolClick):
+        # move mouse to objective area
         action = ActionChains(driver)
-        action.move_to_element(btn_login[0]).click().perform()
-        btn_login[0].click()
+        action.move_to_element(btn_login)
+        action.click(btn_login).perform()
 
+#Check Remember me checkbox as required, if boolCheck == True, states this check box needs to be checked
 def ClickRememberMe(boolCheck):
-    chkBox_RememberMe = driver.find_elements_by_css_selector('input[id="login-remember"]')
-    if (len(chkBox_RememberMe) > 0):
-        print('Remember me check box is exist.')
-    if (boolCheck == False):
-        print("Remember Me status is: "+ str(chkBox_RememberMe[0].is_selected()))
 
+    chkbox_RememberMe = FindElement("css_selector",'input[id="login-remember"]')
+    if (chkbox_RememberMe != None):
+        print('Remember me check box is exist.')
+
+    if (boolCheck == False):
+        print("Remember Me status is: "+ str(chkbox_RememberMe.is_selected()))
         # create action chain object
         action = ActionChains(driver)
         #perform movement
-        action.move_to_element(chkBox_RememberMe[0]).click().perform()
-        print("Remember Me status of selected: " + str(chkBox_RememberMe[0].is_selected()))
+        action.move_to_element(chkbox_RememberMe).click().perform()
+        print("Remember Me status of selected: " + str(chkbox_RememberMe.is_selected()))
 
-def ErrorAlert():
-    msg_Alert = driver.find_element_by_css_selector(".alert span")
-    print(msg_Alert.text)
 
+# Check if the error messages shown as expected
+def ErrorAlert(strExpUsername_Error, strExpPwdError, strExpGeneralError):
+
+    msg_Alert = FindElement("css_selector", ".alert span")
+    error_Username = FindElement("css_selector","[ng-if*=\"username.$error.required\"]")
+    error_Pwd      = FindElement("css_selector","[ng-if*=\"password.$error.required\"]")
+
+    if (error_Username != None):
+        strError_username = error_Username.text
+        print("Username Error: "+ strError_username)
+    else:
+        print("There's no error when puting username.")
+        strError_username = None
+
+    if (error_Pwd != None):
+        strError_pwd = error_Pwd.text
+        print("Password Error: "+strError_pwd)
+    else:
+        print("There's no Error when putting password.")
+        strError_pwd = None
+
+    if (msg_Alert != None):
+        strAlertError = msg_Alert.text
+        print("Login Error: "+ strAlertError)
+    else:
+        print("There's no Alert Error.")
+        strAlertError = None
+
+    if (strExpUsername_Error != strError_username):
+        print("Expected Username Error: "+strExpUsername_Error)
+    if (strError_pwd !=strExpPwdError):
+        print("Expected Password Error: "+strExpPwdError)
+    if (strExpGeneralError != strAlertError):
+        print("Expected general Alert : "+strExpGeneralError)
+        return False
+
+    if (strError_username == strExpUsername_Error and strError_pwd == strExpPwdError and strAlertError == strExpGeneralError):
+        return True
